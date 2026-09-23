@@ -50,6 +50,6 @@
 
 **Arquivos relacionados:** `dao/OperationHistoryDAOInterface.php`, `dao/FileOperationHistoryDAO.php`, `controllers/CalculadoraController.php`, `views/calculadora.tpl.php`, `config/config.ini`
 
-**Spec gerada:** `Não`
+**Spec gerada:** `Sim` (`specs/002-historico-de-calculos/spec.md`)
 
 ---
