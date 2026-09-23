@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Landscape</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+            color: #e8eaed;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 400px;
+            background: linear-gradient(180deg, #1a1f26 0%, #15191f 100%);
+            border-right: 1px solid rgba(54, 163, 217, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 4px 0 24px rgba(54, 163, 217, 0.15);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls {
+            background: linear-gradient(180deg, #1a1f26 0%, #15191f 100%);
+            border-bottom: 1px solid rgba(54, 163, 217, 0.3);
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            flex-direction: column;
+            box-shadow: 0 4px 16px rgba(54, 163, 217, 0.1);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .control-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #36a3d9;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: linear-gradient(135deg, rgba(54, 163, 217, 0.1), rgba(0, 200, 83, 0.1));
+            border: 1px solid rgba(54, 163, 217, 0.4);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #36a3d9;
+            font-weight: 500;
+        }
+
+        .controls label:hover {
+            background: linear-gradient(135deg, rgba(54, 163, 217, 0.25), rgba(0, 200, 83, 0.15));
+            border-color: rgba(54, 163, 217, 0.8);
+            box-shadow: 0 0 16px rgba(54, 163, 217, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .controls input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #36a3d9;
+        }
+
+        .controls select {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 1px solid rgba(54, 163, 217, 0.4);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            background: linear-gradient(135deg, rgba(54, 163, 217, 0.1), rgba(0, 200, 83, 0.1));
+            color: #36a3d9;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        .controls select:hover {
+            border-color: rgba(54, 163, 217, 0.8);
+            box-shadow: 0 0 12px rgba(54, 163, 217, 0.2);
+        }
+
+        .controls select option {
+            background: #1a1f26;
+            color: #36a3d9;
+        }
+
+        #graph {
+            flex: 1;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #graphSvg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .graph-node {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .graph-node rect {
+            stroke-width: 3px;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 12px rgba(54, 163, 217, 0.3));
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .graph-node:hover rect {
+            filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 20px rgba(54, 163, 217, 0.6));
+            stroke-width: 3px;
+        }
+
+        .graph-node.core rect {
+            fill: url(#grad-core);
+            stroke: #2f855a;
+        }
+
+        .graph-node.edge rect {
+            fill: url(#grad-edge);
+            stroke: #975a16;
+        }
+
+        .graph-node.external rect {
+            fill: url(#grad-external);
+            stroke: #2c5282;
+            stroke-dasharray: 8,5;
+        }
+
+        .graph-node text {
+            font-size: 16px;
+            text-anchor: middle;
+            pointer-events: none;
+            fill: white;
+            font-weight: 600;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+
+        .graph-edge {
+            stroke: #999;
+            stroke-width: 2px;
+            opacity: 0.6;
+            marker-end: url(#arrowhead);
+            pointer-events: none;
+        }
+
+        .graph-edge.dependency {
+            stroke: #e53e3e;
+            stroke-width: 2.5px;
+            opacity: 0.7;
+        }
+
+        .graph-edge.related {
+            stroke: #9f7aea;
+            stroke-dasharray: 6,4;
+            opacity: 0.6;
+        }
+
+        .graph-edge.integration {
+            stroke: #4299e1;
+            stroke-width: 2.5px;
+            opacity: 0.7;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(54, 163, 217, 0.15), rgba(0, 200, 83, 0.1));
+            border-bottom: 1px solid rgba(54, 163, 217, 0.3);
+            color: #36a3d9;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 16px rgba(54, 163, 217, 0.1);
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .detail-panel {
+            background: linear-gradient(135deg, rgba(15, 20, 25, 0.95), rgba(10, 15, 20, 0.95));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(54, 163, 217, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(54, 163, 217, 0.15);
+        }
+
+        .detail-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, #36a3d9, #00c853);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .classification-badge {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-core {
+            background: linear-gradient(135deg, #00c853, #00a040);
+            color: white;
+        }
+
+        .badge-edge {
+            background: linear-gradient(135deg, #ff9100, #e65100);
+            color: white;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #36a3d9;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-section-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e8eaed;
+        }
+
+        .tag-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(54, 163, 217, 0.2);
+            border-radius: 12px;
+            font-size: 12px;
+            color: #36a3d9;
+            border: 1px solid rgba(54, 163, 217, 0.5);
+        }
+
+        .tag.dependency {
+            background: rgba(220, 38, 38, 0.2);
+            color: #ff6b6b;
+            border-color: rgba(220, 38, 38, 0.5);
+        }
+
+        .tag.integration {
+            background: rgba(0, 200, 83, 0.2);
+            color: #34d399;
+            border-color: rgba(0, 200, 83, 0.5);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(54, 163, 217, 0.2);
+        }
+
+        .tab-button {
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(232, 234, 237, 0.6);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: -1px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: #36a3d9;
+        }
+
+        .tab-button.active {
+            color: #36a3d9;
+            border-bottom-color: #36a3d9;
+            box-shadow: 0 2px 8px rgba(54, 163, 217, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .matrix {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 12px;
+        }
+
+        .matrix th, .matrix td {
+            border: 1px solid #e2e8f0;
+            padding: 6px;
+            text-align: center;
+            background: white;
+        }
+
+        .matrix th {
+            background: #f7fafc;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .matrix td.direct {
+            background: #fed7d7;
+            color: #742a2a;
+            font-weight: 700;
+        }
+
+        .matrix td.indirect {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .matrix td.empty {
+            background: #f7fafc;
+        }
+
+        .impact-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+            font-size: 13px;
+            color: #2d3748;
+        }
+
+        .impact-item.direct {
+            border-left-color: #e53e3e;
+            background: #fff5f5;
+        }
+
+        .impact-item.indirect {
+            border-left-color: #ed8936;
+            background: #fffaf0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 2px;
+            background: #edf2f7;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #cbd5e0;
+        }
+
+        .badge.core {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #9ae6b4;
+        }
+
+        .badge.edge {
+            background: #feebc8;
+            color: #7c2d12;
+            border-color: #fbd38d;
+        }
+
+        .badge.spec-yes {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #9ae6b4;
+        }
+
+        .badge.spec-no {
+            background: #fed7d7;
+            color: #742a2a;
+            border-color: #fc8181;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .unresolved {
+            background: #fffaf0;
+            border: 1px solid #fbd38d;
+            padding: 12px;
+            margin: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .unresolved-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #7c2d12;
+        }
+
+        .unresolved-item {
+            margin: 4px 0;
+            color: #744210;
+        }
+
+        .graph-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .graph-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .graph-stats {
+            font-size: 13px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">Feature Landscape</div>
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">Buscar Feature</label>
+                    <input type="text" id="searchInput" placeholder="Digite nome da feature..." style="width: 100%; padding: 10px 14px; border: 1px solid rgba(54, 163, 217, 0.4); border-radius: 8px; background: linear-gradient(135deg, rgba(54, 163, 217, 0.1), rgba(0, 200, 83, 0.1)); color: #36a3d9; font-size: 13px; font-family: inherit;" title="Digite o nome de uma feature e pressione Enter para focar nela" />
+                    <div class="tooltip-help" style="position: absolute; bottom: -40px; left: 0; background: rgba(0,0,0,0.9); color: #36a3d9; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 1000;">💡 Digite para buscar</div>
+                </div>
+                <label>
+                    <input type="checkbox" id="filterCore" checked>
+                    Core
+                </label>
+                <label>
+                    <input type="checkbox" id="filterEdge" checked>
+                    Edge
+                </label>
+                <label>
+                    <input type="checkbox" id="filterWithIntegrations">
+                    Com Integrações
+                </label>
+                <select id="categoryFilter">
+                    <option value="">Todos os domínios</option>
+                </select>
+            </div>
+            <div class="sidebar-content">
+                <div id="detailPanel" style="display:none;">
+                    <div class="detail-panel">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div class="detail-title" id="detailName"></div>
+                            <button id="openSpecBtn" style="background: linear-gradient(135deg, rgba(54, 163, 217, 0.2), rgba(0, 200, 83, 0.1)); border: 1px solid rgba(54, 163, 217, 0.6); color: #36a3d9; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; flex-shrink: 0; transition: all 0.2s;" title="Abrir Spec">📄</button>
+                        </div>
+                        <span class="classification-badge" id="detailClassification"></span>
+
+                        <div class="tab-buttons">
+                            <button class="tab-button active" data-tab="details">Detalhes</button>
+                            <button class="tab-button" data-tab="dependencies">Deps</button>
+                            <button class="tab-button" data-tab="impact">Impacto</button>
+                            <button class="tab-button" data-tab="spec">Spec</button>
+                        </div>
+
+                        <div id="detailsTab" class="tab-content active">
+                            <div class="detail-section">
+                                <div class="detail-section-label">Descrição</div>
+                                <div class="detail-section-content" id="detailDescription"></div>
+                            </div>
+
+                            <div class="detail-section">
+                                <div class="detail-section-label">Domínio</div>
+                                <div class="detail-section-content" id="detailCategory"></div>
+                            </div>
+
+                            <div class="detail-section">
+                                <div class="detail-section-label">Componentes</div>
+                                <div class="detail-section-content">
+                                    <div class="tag-list" id="detailComponents"></div>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <div class="detail-section-label">Features Relacionadas</div>
+                                <div class="detail-section-content">
+                                    <div class="tag-list" id="detailRelated"></div>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <div class="detail-section-label">Integrações Externas</div>
+                                <div class="detail-section-content">
+                                    <div class="tag-list" id="detailIntegrations"></div>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <div class="detail-section-label">Origem da Descoberta</div>
+                                <div class="detail-section-content" id="detailOrigin"></div>
+                            </div>
+
+                            <div class="detail-section">
+                                <div class="detail-section-label">Status da Spec</div>
+                                <div class="detail-section-content" id="detailSpecStatus"></div>
+                            </div>
+                        </div>
+                        <div id="dependenciesTab" class="tab-content">
+                            <div class="detail-section">
+                                <div class="detail-section-label">Dependências Diretas</div>
+                                <div class="detail-section-content" id="directDeps"></div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-label">Dependências Indiretas</div>
+                                <div class="detail-section-content" id="indirectDeps"></div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-label">Features Dependentes (Diretos)</div>
+                                <div class="detail-section-content" id="directDependents"></div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-label">Features Dependentes (Indiretos)</div>
+                                <div class="detail-section-content" id="indirectDependents"></div>
+                            </div>
+                        </div>
+                        <div id="impactTab" class="tab-content">
+                            <div id="impactAnalysis"></div>
+                        </div>
+                        <div id="specTab" class="tab-content">
+                            <div id="quickLinksSection" class="detail-section" style="display: none;">
+                                <div class="detail-section-label">Links Rápidos</div>
+                                <div class="detail-section-content" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div id="linkSpec" style="display: none; padding: 12px; background: rgba(54, 163, 217, 0.05); border: 1px solid rgba(54, 163, 217, 0.2); border-radius: 8px; display: flex; align-items: flex-start; gap: 10px;">
+                                        <div style="font-size: 18px; min-width: 24px; text-align: center; flex-shrink: 0;">📄</div>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-size: 11px; color: #718096; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Spec File</div>
+                                            <div class="linkSpecPath" style="font-size: 12px; color: #36a3d9; font-family: 'Courier New', monospace; word-break: break-all; background: rgba(54, 163, 217, 0.1); padding: 6px 8px; border-radius: 4px; margin-bottom: 6px;"></div>
+                                            <div class="linkSpecStatus" style="font-size: 11px; color: #00d084; font-style: italic; min-height: 16px;"></div>
+                                        </div>
+                                        <button class="linkSpecCopy" style="background: transparent; border: 1px solid rgba(54, 163, 217, 0.3); color: #36a3d9; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s ease; flex-shrink: 0;" title="Copiar">📋</button>
+                                    </div>
+                                    <div id="linkTask" style="display: none; padding: 12px; background: rgba(54, 163, 217, 0.05); border: 1px solid rgba(54, 163, 217, 0.2); border-radius: 8px; display: flex; align-items: flex-start; gap: 10px;">
+                                        <div style="font-size: 18px; min-width: 24px; text-align: center; flex-shrink: 0;">✓</div>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-size: 11px; color: #718096; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Task File</div>
+                                            <div class="linkTaskPath" style="font-size: 12px; color: #36a3d9; font-family: 'Courier New', monospace; word-break: break-all; background: rgba(54, 163, 217, 0.1); padding: 6px 8px; border-radius: 4px; margin-bottom: 6px;"></div>
+                                            <div class="linkTaskStatus" style="font-size: 11px; color: #00d084; font-style: italic; min-height: 16px;"></div>
+                                        </div>
+                                        <button class="linkTaskCopy" style="background: transparent; border: 1px solid rgba(54, 163, 217, 0.3); color: #36a3d9; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s ease; flex-shrink: 0;" title="Copiar">📋</button>
+                                    </div>
+                                    <div id="linkFolder" style="display: none; padding: 12px; background: rgba(54, 163, 217, 0.05); border: 1px solid rgba(54, 163, 217, 0.2); border-radius: 8px; display: flex; align-items: flex-start; gap: 10px;">
+                                        <div style="font-size: 18px; min-width: 24px; text-align: center; flex-shrink: 0;">📁</div>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-size: 11px; color: #718096; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Pasta da Feature</div>
+                                            <div class="linkFolderPath" style="font-size: 12px; color: #36a3d9; font-family: 'Courier New', monospace; word-break: break-all; background: rgba(54, 163, 217, 0.1); padding: 6px 8px; border-radius: 4px; margin-bottom: 6px;"></div>
+                                            <div class="linkFolderStatus" style="font-size: 11px; color: #00d084; font-style: italic; min-height: 16px;"></div>
+                                        </div>
+                                        <button class="linkFolderCopy" style="background: transparent; border: 1px solid rgba(54, 163, 217, 0.3); color: #36a3d9; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s ease; flex-shrink: 0;" title="Copiar">📋</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-label">Diretório Base</div>
+                                <div class="detail-section-content" id="specPath" style="font-size: 11px; color: #718096; word-break: break-all;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="noSelectionMessage" style="padding: 20px; color: #718096; font-size: 13px; text-align: center;">
+                    Clique em uma feature no grafo para visualizar detalhes
+                </div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="graph-header">
+                <div>
+                    <div class="graph-title">Feature Map</div>
+                    <div class="graph-stats">2 features • 0 sistemas externos</div>
+                </div>
+            </div>
+            <div id="graph">
+                <!-- Zoom Controls + Info Button -->
+                <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;">
+                    <div style="display: flex; gap: 8px; background: rgba(54, 163, 217, 0.15); padding: 8px; border-radius: 6px; border: 1px solid rgba(54, 163, 217, 0.3);">
+                        <button id="zoomOut" style="width: 32px; height: 32px; background: linear-gradient(135deg, rgba(54, 163, 217, 0.2), rgba(0, 200, 83, 0.1)); border: 1px solid rgba(54, 163, 217, 0.4); border-radius: 4px; color: #36a3d9; cursor: pointer; font-weight: 600; font-size: 16px; transition: all 0.2s;" title="Diminuir zoom">−</button>
+                        <div id="zoomLevel" style="color: #36a3d9; font-size: 12px; padding: 0 8px; display: flex; align-items: center;">100%</div>
+                        <button id="zoomIn" style="width: 32px; height: 32px; background: linear-gradient(135deg, rgba(54, 163, 217, 0.2), rgba(0, 200, 83, 0.1)); border: 1px solid rgba(54, 163, 217, 0.4); border-radius: 4px; color: #36a3d9; cursor: pointer; font-weight: 600; font-size: 16px; transition: all 0.2s;" title="Aumentar zoom">+</button>
+                    </div>
+                    <button id="infoBtn" style="width: 36px; height: 36px; background: linear-gradient(135deg, rgba(54, 163, 217, 0.2), rgba(0, 200, 83, 0.1)); border: 1px solid rgba(54, 163, 217, 0.4); border-radius: 50%; color: #36a3d9; cursor: pointer; font-weight: 600; font-size: 18px; transition: all 0.2s; display: flex; align-items: center; justify-content: center;" title="Ver legendas e controles">?</button>
+                </div>
+
+                <!-- Modal Info -->
+                <div id="infoModal" style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); border-radius: 8px; display: none; align-items: center; justify-content: center; z-index: 100;">
+                    <div style="background: linear-gradient(135deg, rgba(15, 20, 25, 0.98), rgba(10, 15, 20, 0.98)); border: 1px solid rgba(54, 163, 217, 0.3); border-radius: 8px; padding: 24px; width: 380px; max-height: 80vh; overflow-y: auto; color: #cbd5e0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <strong style="color: #36a3d9; font-size: 16px;">Legendas & Controles</strong>
+                            <button id="closeModal" style="background: none; border: none; color: #36a3d9; cursor: pointer; font-size: 20px; font-weight: 600;">✕</button>
+                        </div>
+                        <strong style="color: #36a3d9; display: block; margin-bottom: 10px; font-size: 12px; text-transform: uppercase;">Controles do Grafo:</strong>
+                        <div style="font-size: 12px; line-height: 1.6; margin-bottom: 16px; color: #cbd5e0;">
+                            🖱️ <strong>Arrastar:</strong> Clique no quadrado e arraste<br/>
+                            🔍 <strong>Zoom:</strong> Ctrl + scroll (ou botões +/−)<br/>
+                            🖐️ <strong>Pan:</strong> Shift + arraste<br/>
+                            🔄 <strong>Reset:</strong> Duplo clique
+                        </div>
+                        <strong style="color: #36a3d9; display: block; margin-bottom: 10px; font-size: 12px; text-transform: uppercase;">Legendas de Cores:</strong>
+                        <div style="font-size: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <div style="width: 20px; height: 14px; background: linear-gradient(135deg, #00d084, #00a86b); border: 2px solid #2f855a; border-radius: 2px;"></div>
+                                <span><strong style="color: #00d084;">Core</strong> — Fluxo principal do sistema</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <div style="width: 20px; height: 14px; background: linear-gradient(135deg, #ffb84d, #ff8c00); border: 2px solid #975a16; border-radius: 2px;"></div>
+                                <span><strong style="color: #ffb84d;">Edge</strong> — Suporte/Configuração</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 20px; height: 14px; background: linear-gradient(135deg, #4da6ff, #0066cc); border: 2px dashed #2c5282; border-radius: 2px;"></div>
+                                <span><strong style="color: #4da6ff;">Externo</strong> — Sistema integrado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Tabs -->
+                <div id="bottomTabs" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(26, 31, 38, 0.95); border-top: 1px solid rgba(54, 163, 217, 0.3); border-radius: 0 0 8px 8px; padding: 12px; z-index: 10; display: none;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <button class="tab-btn active" data-tab="controles" style="padding: 6px 12px; background: rgba(54, 163, 217, 0.3); border: 1px solid rgba(54, 163, 217, 0.6); border-radius: 4px; color: #36a3d9; cursor: pointer; font-size: 11px; font-weight: 600; text-transform: uppercase;">Controles</button>
+                        <button class="tab-btn" data-tab="legendas" style="padding: 6px 12px; background: rgba(54, 163, 217, 0.1); border: 1px solid rgba(54, 163, 217, 0.3); border-radius: 4px; color: #36a3d9; cursor: pointer; font-size: 11px; font-weight: 600; text-transform: uppercase;">Legendas</button>
+                    </div>
+                    <div id="controlesTab" class="tab-content" style="color: #cbd5e0; font-size: 11px; line-height: 1.5;">
+                        🖱️ <strong>Arrastar:</strong> Clique no quadrado e arraste para mover<br/>
+                        🔍 <strong>Zoom:</strong> Ctrl + scroll do mouse (ou botões +/−)<br/>
+                        🖐️ <strong>Pan:</strong> Shift + arraste para mover a câmera<br/>
+                        🔄 <strong>Reset:</strong> Duplo clique para voltar ao normal
+                    </div>
+                    <div id="legendasTab" class="tab-content" style="color: #cbd5e0; font-size: 11px; line-height: 1.5; display: none;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <div style="width: 16px; height: 12px; background: linear-gradient(135deg, #00d084, #00a86b); border: 2px solid #2f855a; border-radius: 2px;"></div>
+                            <span><strong style="color: #00d084;">Core</strong> — Fluxo principal</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <div style="width: 16px; height: 12px; background: linear-gradient(135deg, #ffb84d, #ff8c00); border: 2px solid #975a16; border-radius: 2px;"></div>
+                            <span><strong style="color: #ffb84d;">Edge</strong> — Suporte/Config</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 16px; height: 12px; background: linear-gradient(135deg, #4da6ff, #0066cc); border: 2px dashed #2c5282; border-radius: 2px;"></div>
+                            <span><strong style="color: #4da6ff;">Externo</strong> — Sistema integrado</span>
+                        </div>
+                    </div>
+                </div>
+                <svg id="graphSvg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="#999" />
+                        </marker>
+                        <linearGradient id="grad-core" x1="0%" y1="0%" x2="120%" y2="120%">
+                            <stop offset="0%" style="stop-color:#00d084;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#00a86b;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad-edge" x1="0%" y1="0%" x2="120%" y2="120%">
+                            <stop offset="0%" style="stop-color:#ffb84d;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ff8c00;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad-external" x1="0%" y1="0%" x2="120%" y2="120%">
+                            <stop offset="0%" style="stop-color:#4da6ff;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#0066cc;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <g id="edges"></g>
+                    <g id="nodes"></g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const DATA = {"features": [{"id": "c-lculo-aritm-tico-b-sico", "name": "Cálculo Aritmético Básico", "description": "Permite ao usuário informar dois números, escolher uma operação (soma, subtração, multiplicação ou divisão) e obter o resultado formatado no padrão brasileiro. O sistema rejeita campos vazios, valores não numéricos e divisão por zero, exibindo uma mensagem de erro. Os valores digitados permanecem no formulário após o envio.", "classification": "Core", "category": "Histórico", "components": "operations (estratégias de operação e fábrica com whitelist), helpers (validação e formatação numérica pt-BR)", "origin": "Rota `calculadora` (`index.php`) → `CalculadoraController::tratarRequisicao` (fluxo POST/Redirect/GET) e tela `views/calculadora.tpl.php`", "spec_generated": false, "folder_path": "C:\\Users\\rafael.pires\\Documents\\programas-teste-esteira\\demo-moder-modernizacao\\specs\\Redirect", "spec_path": "C:\\Users\\rafael.pires\\Documents\\programas-teste-esteira\\demo-moder-modernizacao\\specs\\Redirect\\spec.md", "task_path": "C:\\Users\\rafael.pires\\Documents\\programas-teste-esteira\\demo-moder-modernizacao\\specs\\Redirect\\tasks.md"}, {"id": "hist-rico-de-c-lculos", "name": "Histórico de Cálculos", "description": "Registra de forma persistente cada cálculo bem-sucedido, com data/hora, expressão e resultado. Exibe ao usuário a lista dos cálculos mais recentes, do mais novo para o mais antigo, com quantidade máxima configurável (padrão: 5).", "classification": "Edge", "category": "Histórico", "components": "dao (persistência do histórico em arquivo `data/historico.dat`)", "origin": "`FileOperationHistoryDAO` (métodos `registrar` / `listarUltimos`), seção \"Ultimos calculos\" em `views/calculadora.tpl.php` e chave `[historico] max_registros_exibidos` em `config/config.ini`", "spec_generated": false, "folder_path": "C:\\Users\\rafael.pires\\Documents\\programas-teste-esteira\\demo-moder-modernizacao\\specs\\ `listarUltimos`), seção \"Ultimos calculos\" em `views", "spec_path": "C:\\Users\\rafael.pires\\Documents\\programas-teste-esteira\\demo-moder-modernizacao\\specs\\ `listarUltimos`), seção \"Ultimos calculos\" em `views\\spec.md", "task_path": "C:\\Users\\rafael.pires\\Documents\\programas-teste-esteira\\demo-moder-modernizacao\\specs\\ `listarUltimos`), seção \"Ultimos calculos\" em `views\\tasks.md"}], "external_systems": [], "edges": [{"from": "Cálculo Aritmético Básico", "to": "Histórico de Cálculos", "type": "dependency"}, {"from": "Cálculo Aritmético Básico", "to": "Histórico de Cálculos", "type": "related"}, {"from": "Histórico de Cálculos", "to": "Cálculo Aritmético Básico", "type": "dependency"}], "unresolved": []};
+
+        let selectedNodeId = null;
+        let simulation = null;
+        let animationId = null;
+        let zoom = 1.0;
+        let panX = 0;
+        let panY = 0;
+        let isDragging = false;
+        let draggedNode = null;
+        let isPanning = false;
+        let panStart = {x: 0, y: 0};
+        let nodePositions = {};
+
+        function slugify(text) {
+            return text.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+        }
+
+        function initializeGraph() {
+            console.log('initializeGraph called');
+            const svg = document.getElementById('graphSvg');
+            console.log('SVG element:', svg);
+            const container = document.getElementById('graph');
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+
+            // Create nodes array
+            const nodes = [
+                ...DATA.features.map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    type: 'feature',
+                    classification: f.classification,
+                    category: f.category,
+                    ...f
+                })),
+                ...DATA.external_systems.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    type: 'system',
+                }))
+            ];
+
+            // Create links array
+            const links = DATA.edges.map(e => ({
+                source: nodes.find(n => n.name === e.from),
+                target: nodes.find(n => n.name === e.to),
+                type: e.type
+            })).filter(l => l.source && l.target);
+
+            // Simple force simulation
+            let nodePositions = {};
+            nodes.forEach((n, i) => {
+                const angle = (i / nodes.length) * 2 * Math.PI;
+                const radius = Math.min(width, height) / 2 - 50;
+                nodePositions[n.id] = {
+                    x: width / 2 + radius * Math.cos(angle),
+                    y: height / 2 + radius * Math.sin(angle),
+                    vx: 0,
+                    vy: 0
+                };
+            });
+
+            // Render function
+            function render() {
+                const edgesGroup = document.getElementById('edges');
+                const nodesGroup = document.getElementById('nodes');
+
+                edgesGroup.innerHTML = '';
+                links.forEach(link => {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('class', `graph-edge ${link.type}`);
+                    line.setAttribute('x1', nodePositions[link.source.id].x);
+                    line.setAttribute('y1', nodePositions[link.source.id].y);
+                    line.setAttribute('x2', nodePositions[link.target.id].x);
+                    line.setAttribute('y2', nodePositions[link.target.id].y);
+                    line.setAttribute('data-from', link.source.name);
+                    line.setAttribute('data-to', link.target.name);
+                    edgesGroup.appendChild(line);
+                });
+
+                nodesGroup.innerHTML = '';
+                nodes.forEach(node => {
+                    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    g.setAttribute('class', `graph-node ${node.type === 'feature' ? node.classification.toLowerCase() : 'external'}`);
+                    g.setAttribute('data-id', node.id);
+                    g.style.cursor = 'pointer';
+
+                    // Add tooltip with full name
+                    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                    title.textContent = node.name;
+                    g.appendChild(title);
+
+                    const size = node.type === 'system' ? 220 : 180;
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', nodePositions[node.id].x - size / 2);
+                    rect.setAttribute('y', nodePositions[node.id].y - size / 2);
+                    rect.setAttribute('width', size);
+                    rect.setAttribute('height', size);
+                    rect.setAttribute('rx', 16);
+                    rect.setAttribute('ry', 16);
+                    if (node.type === 'feature') {
+                        rect.setAttribute('fill', node.classification === 'Core' ? 'url(#grad-core)' : 'url(#grad-edge)');
+                    } else {
+                        rect.setAttribute('fill', 'url(#grad-external)');
+                    }
+                    g.appendChild(rect);
+
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', nodePositions[node.id].x);
+                    text.setAttribute('y', nodePositions[node.id].y);
+                    text.setAttribute('dy', '0.3em');
+
+                    // Break text into multiple lines
+                    const words = node.name.split(' ');
+                    let line = '';
+                    const lines = [];
+                    words.forEach(word => {
+                        if ((line + word).length > 14) {
+                            if (line) lines.push(line.trim());
+                            line = word + ' ';
+                        } else {
+                            line += word + ' ';
+                        }
+                    });
+                    if (line) lines.push(line.trim());
+
+                    // Create tspan elements for each line
+                    lines.forEach((l, i) => {
+                        const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                        tspan.textContent = l;
+                        tspan.setAttribute('x', nodePositions[node.id].x);
+                        tspan.setAttribute('dy', i === 0 ? 0 : '1.2em');
+                        text.appendChild(tspan);
+                    });
+
+                    g.appendChild(text);
+
+                    // Store node reference for click handler
+                    g.nodeData = node;
+                    g.setAttribute('data-id', node.id);
+                    g.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        selectNode(this.nodeData.id);
+                    });
+                    nodesGroup.appendChild(g);
+                });
+            }
+
+            render();
+
+            // Simple physics simulation
+            function simulate() {
+                const damping = 0.1;
+                const repulsion = 300;
+                const attraction = 0.08;
+
+                for (let i = 0; i < 1; i++) {
+                    // Repulsion between all nodes
+                    nodes.forEach((n1, idx1) => {
+                        nodes.slice(idx1 + 1).forEach(n2 => {
+                            const dx = nodePositions[n2.id].x - nodePositions[n1.id].x;
+                            const dy = nodePositions[n2.id].y - nodePositions[n1.id].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                            const force = repulsion / (dist * dist);
+                            nodePositions[n1.id].vx -= (force * dx) / dist;
+                            nodePositions[n1.id].vy -= (force * dy) / dist;
+                            nodePositions[n2.id].vx += (force * dx) / dist;
+                            nodePositions[n2.id].vy += (force * dy) / dist;
+                        });
+                    });
+
+                    // Attraction along edges
+                    links.forEach(link => {
+                        const dx = nodePositions[link.target.id].x - nodePositions[link.source.id].x;
+                        const dy = nodePositions[link.target.id].y - nodePositions[link.source.id].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                        const targetDist = 280;
+                        const force = attraction * (dist - targetDist);
+                        nodePositions[link.source.id].vx += (force * dx) / dist;
+                        nodePositions[link.source.id].vy += (force * dy) / dist;
+                        nodePositions[link.target.id].vx -= (force * dx) / dist;
+                        nodePositions[link.target.id].vy -= (force * dy) / dist;
+                    });
+
+                    // Update positions with damping
+                    nodes.forEach(n => {
+                        nodePositions[n.id].x += nodePositions[n.id].vx * damping;
+                        nodePositions[n.id].y += nodePositions[n.id].vy * damping;
+                        nodePositions[n.id].vx *= (1 - damping);
+                        nodePositions[n.id].vy *= (1 - damping);
+
+                        // Boundaries
+                        nodePositions[n.id].x = Math.max(40, Math.min(width - 40, nodePositions[n.id].x));
+                        nodePositions[n.id].y = Math.max(40, Math.min(height - 40, nodePositions[n.id].y));
+                    });
+                }
+
+                render();
+                animationId = requestAnimationFrame(simulate);
+            }
+
+            simulate();
+
+            // Initialize filters
+            const categories = [...new Set(DATA.features.map(f => f.category).filter(c => c))];
+            const categorySelect = document.getElementById('categoryFilter');
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                categorySelect.appendChild(opt);
+            });
+
+            // Focus mode and search
+            let focusMode = null;
+
+            function applyFocusMode() {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const allNodes = document.querySelectorAll('.graph-node');
+                const allEdges = document.querySelectorAll('.graph-edge');
+
+                if (!searchTerm) {
+                    // Clear focus mode
+                    allNodes.forEach(n => n.style.opacity = '1');
+                    allEdges.forEach(e => e.style.opacity = '0.6');
+                    focusMode = null;
+                    return;
+                }
+
+                // Find matching node
+                const matchedFeature = DATA.features.find(f => f.name.toLowerCase().includes(searchTerm));
+                if (!matchedFeature) return;
+
+                focusMode = matchedFeature.name;
+
+                // Find connected nodes (1 hop)
+                const connected = new Set([matchedFeature.name]);
+                DATA.edges.forEach(e => {
+                    if (e.from === matchedFeature.name) connected.add(e.to);
+                    if (e.to === matchedFeature.name) connected.add(e.from);
+                });
+
+                // Hide/show nodes
+                allNodes.forEach(node => {
+                    const nodeName = DATA.features.find(f => f.id === node.getAttribute('data-id'))?.name;
+                    if (connected.has(nodeName)) {
+                        node.style.opacity = '1';
+                    } else {
+                        node.style.opacity = '0.15';
+                    }
+                });
+
+                // Hide/show edges
+                allEdges.forEach(edge => {
+                    const from = edge.getAttribute('data-from');
+                    const to = edge.getAttribute('data-to');
+                    if ((connected.has(from) && connected.has(to))) {
+                        edge.style.opacity = '0.7';
+                    } else {
+                        edge.style.opacity = '0.1';
+                    }
+                });
+            }
+
+            // Zoom controls
+            function updateZoom() {
+                document.getElementById('zoomLevel').textContent = Math.round(zoom * 100) + '%';
+                const svg = document.getElementById('graphSvg');
+                svg.style.transform = `scale(${zoom}) translate(${panX}px, ${panY}px)`;
+                svg.style.transformOrigin = 'top left';
+            }
+
+            document.getElementById('zoomIn').addEventListener('click', () => {
+                zoom = Math.min(zoom + 0.1, 3.0);
+                updateZoom();
+            });
+
+            document.getElementById('zoomOut').addEventListener('click', () => {
+                zoom = Math.max(zoom - 0.1, 0.3);
+                updateZoom();
+            });
+
+            // Scroll zoom
+            document.getElementById('graph').addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    zoom += e.deltaY > 0 ? -0.1 : 0.1;
+                    zoom = Math.max(0.3, Math.min(zoom, 3.0));
+                    updateZoom();
+                }
+            }, { passive: false });
+
+            // Drag nodes
+            document.getElementById('graphSvg').addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'rect' || e.target.tagName === 'text') {
+                    const g = e.target.closest('.graph-node');
+                    if (g && g.nodeData) {
+                        isDragging = true;
+                        draggedNode = g.nodeData;
+                        e.preventDefault();
+                    }
+                } else if (e.button === 2 || e.shiftKey) {
+                    isPanning = true;
+                    panStart = {x: e.clientX - panX, y: e.clientY - panY};
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && draggedNode) {
+                    const svg = document.getElementById('graphSvg');
+                    const rect = svg.getBoundingClientRect();
+                    nodePositions[draggedNode.id].x = (e.clientX - rect.left) / zoom - panX;
+                    nodePositions[draggedNode.id].y = (e.clientY - rect.top) / zoom - panY;
+                    render();
+                } else if (isPanning) {
+                    panX = e.clientX - panStart.x;
+                    panY = e.clientY - panStart.y;
+                    updateZoom();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    localStorage.setItem('node-positions', JSON.stringify(nodePositions));
+                }
+                isDragging = false;
+                draggedNode = null;
+                isPanning = false;
+            });
+
+            // Double click to reset zoom
+            document.getElementById('graphSvg').addEventListener('dblclick', () => {
+                zoom = 1.0;
+                panX = 0;
+                panY = 0;
+                updateZoom();
+            });
+
+            // Load saved positions
+            const savedPositions = localStorage.getItem('node-positions');
+            if (savedPositions) {
+                try {
+                    const saved = JSON.parse(savedPositions);
+                    Object.assign(nodePositions, saved);
+                } catch (e) {
+                    // Invalid JSON, ignore
+                }
+            }
+
+            // Modal controls
+            const infoBtn = document.getElementById('infoBtn');
+            const infoModal = document.getElementById('infoModal');
+            const closeModal = document.getElementById('closeModal');
+
+            infoBtn.addEventListener('click', () => {
+                infoModal.style.display = 'flex';
+            });
+
+            closeModal.addEventListener('click', () => {
+                infoModal.style.display = 'none';
+            });
+
+            infoModal.addEventListener('click', (e) => {
+                if (e.target === infoModal) {
+                    infoModal.style.display = 'none';
+                }
+            });
+
+            // Tab controls
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.style.background = 'rgba(54, 163, 217, 0.1)';
+                        b.style.borderColor = 'rgba(54, 163, 217, 0.3)';
+                    });
+                    this.style.background = 'rgba(54, 163, 217, 0.3)';
+                    this.style.borderColor = 'rgba(54, 163, 217, 0.6)';
+
+                    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                    document.getElementById(tab + 'Tab').style.display = 'block';
+                });
+            });
+
+            // Show tabs on hover near bottom
+            const graphArea = document.getElementById('graph');
+            graphArea.addEventListener('mouseenter', () => {
+                const bottomTabs = document.getElementById('bottomTabs');
+                if (bottomTabs.style.display === 'none') {
+                    bottomTabs.style.display = 'block';
+                }
+            });
+
+            // Event listeners
+            document.getElementById('searchInput').addEventListener('input', applyFocusMode);
+            document.getElementById('filterCore').addEventListener('change', updateFilters);
+            document.getElementById('filterEdge').addEventListener('change', updateFilters);
+            document.getElementById('filterWithIntegrations').addEventListener('change', updateFilters);
+            document.getElementById('categoryFilter').addEventListener('change', updateFilters);
+
+            function updateDependenciesIfNeeded() {
+                if (!selectedNodeId) return;
+                if (document.getElementById('directDeps').textContent !== '...') return;
+
+                const node = DATA.features.find(f => f.id === selectedNodeId);
+                if (!node) return;
+
+                const directDeps = DATA.edges
+                    .filter(e => e.from === node.name && e.type === 'dependency')
+                    .map(e => e.to);
+                const indirectDeps = calculateTransitiveDeps(node.name, new Set(directDeps));
+                const directDependents = DATA.edges
+                    .filter(e => e.to === node.name && e.type === 'dependency')
+                    .map(e => e.from);
+                const indirectDependents = calculateTransitiveDependents(node.name, new Set(directDependents));
+
+                document.getElementById('directDeps').textContent = directDeps.length > 0 ? directDeps.join(', ') : '(nenhuma)';
+                document.getElementById('indirectDeps').textContent = indirectDeps.size > 0 ? Array.from(indirectDeps).join(', ') : '(nenhuma)';
+                document.getElementById('directDependents').textContent = directDependents.length > 0 ? directDependents.join(', ') : '(nenhuma)';
+                document.getElementById('indirectDependents').textContent = indirectDependents.size > 0 ? Array.from(indirectDependents).join(', ') : '(nenhuma)';
+
+                const impactHtml = `
+                    <div class="impact-item direct">
+                        <strong>Diretas:</strong> ${directDeps.length} features
+                    </div>
+                    <div class="impact-item indirect">
+                        <strong>Indiretas:</strong> ${indirectDeps.size} features
+                    </div>
+                    <div class="impact-item direct">
+                        <strong>Impactadas (direto):</strong> ${directDependents.length} features
+                    </div>
+                    <div class="impact-item indirect">
+                        <strong>Impactadas (indireto):</strong> ${indirectDependents.size} features
+                    </div>
+                `;
+                document.getElementById('impactAnalysis').innerHTML = impactHtml;
+            }
+
+            // Tab switching
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(tab + 'Tab').classList.add('active');
+
+                    if (tab === 'dependencies' || tab === 'impact') {
+                        updateDependenciesIfNeeded();
+                    }
+                });
+            });
+
+            window.updateFilters = updateFilters;
+            window.selectNode = selectNode;
+
+            // Context-sensitive tooltips
+            function setupTooltips() {
+                const tooltips = {
+                    'searchInput': '🔍 Digite o nome de uma feature para buscar',
+                    'zoomIn': '🔍 Zoom in (Ctrl + Scroll)',
+                    'zoomOut': '🔍 Zoom out (Ctrl + Scroll)',
+                    'infoBtn': 'ℹ️ Ver legendas e controles',
+                    'filterCore': '✓ Mostrar/ocultar Core (principal)',
+                    'filterEdge': '✓ Mostrar/ocultar Edge (suporte)',
+                    'filterWithIntegrations': '✓ Mostrar apenas com integrações externas',
+                    'categoryFilter': '📁 Filtrar por categoria/domínio'
+                };
+
+                Object.keys(tooltips).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+
+                    el.addEventListener('mouseenter', (e) => {
+                        const tooltip = document.createElement('div');
+                        tooltip.style.cssText = 'position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: #36a3d9; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 1000; pointer-events: none;';
+                        tooltip.textContent = tooltips[id];
+                        el.style.position = 'relative';
+                        el.appendChild(tooltip);
+
+                        el._tooltip = tooltip;
+                    });
+
+                    el.addEventListener('mouseleave', () => {
+                        if (el._tooltip) {
+                            el._tooltip.remove();
+                            el._tooltip = null;
+                        }
+                    });
+                });
+            }
+
+            // Interactive tour for first-time users
+            function setupTour() {
+                const tourCompleted = localStorage.getItem('feature-landscape-tour-completed');
+                const tourNeverShow = localStorage.getItem('feature-landscape-tour-never-show');
+                if (tourCompleted || tourNeverShow) return;
+
+                const tourSteps = [
+                    {
+                        target: '.sidebar-header',
+                        title: '👋 Bem-vindo ao Feature Landscape!',
+                        text: 'Visualize todas as features, suas dependências e relacionamentos de forma interativa.'
+                    },
+                    {
+                        target: '#searchInput',
+                        title: '🔍 Busque Features',
+                        text: 'Digite o nome de uma feature para focar nela no grafo. Por exemplo: "Login"'
+                    },
+                    {
+                        target: '#filterCore',
+                        title: '🎯 Filtre por Tipo',
+                        text: 'Core = fluxo principal. Edge = suporte/configuração. Combine filtros para análises personalizadas.'
+                    },
+                    {
+                        target: '#graphSvg',
+                        title: '🖱️ Mova os Nós',
+                        text: 'Clique e arraste qualquer quadrado para reorganizar o grafo. As conexões se atualizam automaticamente.'
+                    },
+                    {
+                        target: '#zoomIn',
+                        title: '🔍 Zoom & Pan',
+                        text: 'Use Ctrl + Scroll para zoom, ou Shift + arraste para mover a câmera. Duplo clique para resetar.'
+                    },
+                    {
+                        target: '#openSpecBtn',
+                        title: '📄 Acesse a Spec da Feature',
+                        text: 'Clique no ícone 📄 para abrir a spec.md. Use a aba "Spec & Links" para acessar README, exemplos e documentação relacionada.'
+                    },
+                    {
+                        target: '#infoBtn',
+                        title: '📚 Legendas & Controles',
+                        text: 'Clique no "?" para ver todas as legendas, cores e atalhos. Sempre acessível quando precisar!'
+                    }
+                ];
+
+                let currentStep = 0;
+
+                function showTourStep() {
+                    const step = tourSteps[currentStep];
+                    const targetEl = document.querySelector(step.target);
+                    if (!targetEl) {
+                        nextTourStep();
+                        return;
+                    }
+
+                    // Overlay
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999;';
+                    overlay.id = 'tour-overlay';
+
+                    // Highlight box
+                    const rect = targetEl.getBoundingClientRect();
+                    const highlight = document.createElement('div');
+                    highlight.style.cssText = `position: fixed; left: ${rect.left - 4}px; top: ${rect.top - 4}px; width: ${rect.width + 8}px; height: ${rect.height + 8}px; border: 3px solid #36a3d9; border-radius: 8px; box-shadow: 0 0 0 10000px rgba(0,0,0,0.7); z-index: 9998; pointer-events: none;`;
+                    highlight.id = 'tour-highlight';
+
+                    // Tooltip
+                    const tooltip = document.createElement('div');
+                    tooltip.id = 'tour-tooltip';
+                    tooltip.style.cssText = 'position: fixed; background: linear-gradient(135deg, rgba(15, 20, 25, 0.98), rgba(10, 15, 20, 0.98)); border: 1px solid rgba(54, 163, 217, 0.4); border-radius: 8px; padding: 20px; z-index: 10000; max-width: 320px; color: #cbd5e0;';
+
+                    let left = rect.left + rect.width / 2 - 160;
+                    let top = rect.bottom + 20;
+                    if (top + 200 > window.innerHeight) {
+                        top = rect.top - 220;
+                    }
+                    if (left < 10) left = 10;
+                    if (left + 320 > window.innerWidth) left = window.innerWidth - 330;
+
+                    tooltip.style.left = left + 'px';
+                    tooltip.style.top = top + 'px';
+                    tooltip.innerHTML = `
+                        <strong style="color: #36a3d9; display: block; margin-bottom: 8px; font-size: 14px;">${step.title}</strong>
+                        <p style="margin-bottom: 12px; font-size: 13px; line-height: 1.5;">${step.text}</p>
+                        <label id="tour-skip-checkbox" style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 11px; color: #cbd5e0; cursor: pointer;">
+                            <input type="checkbox" style="cursor: pointer; width: 14px; height: 14px; accent-color: #36a3d9;" />
+                            <span>Não mostrar novamente</span>
+                        </label>
+                        <div style="display: flex; gap: 8px; justify-content: space-between;">
+                            <button id="tour-skip" style="padding: 8px 14px; background: transparent; border: 1px solid #36a3d9; color: #36a3d9; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Pular</button>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <span style="font-size: 11px; color: #718096;">Passo ${currentStep + 1} de ${tourSteps.length}</span>
+                                <button id="tour-next" style="padding: 8px 14px; background: linear-gradient(135deg, rgba(54, 163, 217, 0.3), rgba(0, 200, 83, 0.2)); border: 1px solid #36a3d9; color: #36a3d9; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Próximo</button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.appendChild(overlay);
+                    document.body.appendChild(highlight);
+                    document.body.appendChild(tooltip);
+
+                    document.getElementById('tour-next').addEventListener('click', nextTourStep);
+                    document.getElementById('tour-skip').addEventListener('click', () => {
+                        const checkbox = document.querySelector('#tour-skip-checkbox input[type="checkbox"]');
+                        if (checkbox && checkbox.checked) {
+                            localStorage.setItem('feature-landscape-tour-never-show', 'true');
+                        }
+                        endTour();
+                    });
+                }
+
+                function cleanupTour() {
+                    const overlay = document.getElementById('tour-overlay');
+                    const highlight = document.getElementById('tour-highlight');
+                    const tooltip = document.getElementById('tour-tooltip');
+
+                    if (overlay) overlay.remove();
+                    if (highlight) highlight.remove();
+                    if (tooltip) tooltip.remove();
+                }
+
+                function nextTourStep() {
+                    cleanupTour();
+                    currentStep++;
+                    if (currentStep < tourSteps.length) {
+                        setTimeout(showTourStep, 300);
+                    } else {
+                        endTour();
+                    }
+                }
+
+                function endTour() {
+                    cleanupTour();
+                    localStorage.setItem('feature-landscape-tour-completed', 'true');
+                }
+
+                // Start tour after a short delay
+                setTimeout(showTourStep, 500);
+            }
+
+            setupTooltips();
+            setupTour();
+        }
+
+        function updateFilters() {
+            const showCore = document.getElementById('filterCore').checked;
+            const showEdge = document.getElementById('filterEdge').checked;
+            const showWithIntegrations = document.getElementById('filterWithIntegrations').checked;
+            const category = document.getElementById('categoryFilter').value;
+
+            document.querySelectorAll('.graph-node').forEach(node => {
+                const id = node.getAttribute('data-id');
+                const feature = DATA.features.find(f => f.id === id);
+
+                if (!feature) {
+                    node.style.opacity = '1';
+                    return;
+                }
+
+                let show = true;
+
+                if (feature.classification === 'Core' && !showCore) show = false;
+                if (feature.classification === 'Edge' && !showEdge) show = false;
+
+                if (showWithIntegrations && !feature.integrations) show = false;
+
+                if (category && feature.category !== category) show = false;
+
+                node.style.opacity = show ? '1' : '0.2';
+            });
+        }
+
+        function selectNode(nodeId) {
+            selectedNodeId = nodeId;
+            if (animationId) cancelAnimationFrame(animationId);
+
+            const node = DATA.features.find(f => f.id === nodeId);
+            if (!node) return;
+
+            document.getElementById('detailPanel').style.display = 'block';
+            document.getElementById('noSelectionMessage').style.display = 'none';
+
+            document.getElementById('detailName').textContent = node.name;
+            document.getElementById('detailDescription').textContent = node.description || '(sem descrição)';
+            document.getElementById('detailClassification').innerHTML = `<span class="badge ${node.classification.toLowerCase()}">${node.classification}</span>`;
+            document.getElementById('detailCategory').textContent = node.category || '(sem categoria)';
+            document.getElementById('detailComponents').textContent = node.components || '(nenhum)';
+            document.getElementById('detailRelated').textContent = node.related_features || '(nenhum)';
+            document.getElementById('detailIntegrations').textContent = node.integrations || '(nenhum)';
+            document.getElementById('detailOrigin').textContent = node.origin || '(desconhecida)';
+            document.getElementById('detailSpecStatus').innerHTML = `<span class="badge spec-${node.spec_generated ? 'yes' : 'no'}">${node.spec_generated ? 'Gerada' : 'Não gerada'}</span>`;
+
+            // Hide/show SPEC tab based on spec_generated
+            const specTab = document.getElementById('specTab');
+            const specTabButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => btn.getAttribute('data-tab') === 'spec');
+
+            // Control quick links section visibility
+            const quickLinksSection = document.getElementById('quickLinksSection');
+
+            if (!node.spec_generated) {
+                // Hide spec tab and button if spec not generated
+                specTab.style.display = 'none';
+                if (specTabButton) specTabButton.style.display = 'none';
+                if (quickLinksSection) quickLinksSection.style.display = 'none';
+            } else {
+                specTab.style.display = 'block';
+                if (specTabButton) specTabButton.style.display = 'block';
+
+                // Setup quick links
+                const hasSpecPath = node.spec_path && node.spec_path.length > 0;
+
+                if (hasSpecPath) {
+                    if (quickLinksSection) quickLinksSection.style.display = 'block';
+                    // Show spec file link
+                    document.querySelector('.linkSpecPath').textContent = node.spec_path;
+                    document.getElementById('linkSpec').style.display = 'flex';
+                    document.querySelector('.linkSpecCopy').onclick = () => copyLinkToClipboard(node.spec_path, '.linkSpecStatus', document.querySelector('.linkSpecCopy'));
+
+                    // Show task file link
+                    if (node.task_path) {
+                        document.querySelector('.linkTaskPath').textContent = node.task_path;
+                        document.getElementById('linkTask').style.display = 'flex';
+                        document.querySelector('.linkTaskCopy').onclick = () => copyLinkToClipboard(node.task_path, '.linkTaskStatus', document.querySelector('.linkTaskCopy'));
+                    } else {
+                        document.getElementById('linkTask').style.display = 'none';
+                    }
+
+                    // Show folder link
+                    if (node.folder_path) {
+                        document.querySelector('.linkFolderPath').textContent = node.folder_path;
+                        document.getElementById('linkFolder').style.display = 'flex';
+                        document.querySelector('.linkFolderCopy').onclick = () => copyLinkToClipboard(node.folder_path, '.linkFolderStatus', document.querySelector('.linkFolderCopy'));
+                    } else {
+                        document.getElementById('linkFolder').style.display = 'none';
+                    }
+                } else {
+                    // Hide all links if path doesn't exist
+                    if (quickLinksSection) quickLinksSection.style.display = 'none';
+                    document.getElementById('linkSpec').style.display = 'none';
+                    document.getElementById('linkTask').style.display = 'none';
+                    document.getElementById('linkFolder').style.display = 'none';
+                }
+            }
+
+            // Show placeholders - actual data loads when tabs are clicked
+            document.getElementById('directDeps').textContent = '...';
+            document.getElementById('indirectDeps').textContent = '...';
+            document.getElementById('directDependents').textContent = '...';
+            document.getElementById('indirectDependents').textContent = '...';
+            document.getElementById('impactAnalysis').innerHTML = '<p>Carregando...</p>';
+
+            // Setup spec files - resolve relative to HTML location
+            let baseUrl = window.location.pathname.split('/').slice(0, -1).join('/');
+            // Fix Windows paths: /C:/path -> C:/path
+            if (baseUrl.startsWith('/') && baseUrl.match(/^\/[A-Z]:/)) {
+                baseUrl = baseUrl.substring(1);
+            }
+
+            // Transform feature ID to folder name (remove common Portuguese words)
+            const folderName = nodeId
+                .replace(/-de-/g, '-')
+                .replace(/-e-/g, '-')
+                .replace(/-a-/g, '-')
+                .replace(/^de-/, '')
+                .replace(/^e-/, '');
+
+            const specPath = `${baseUrl}/${folderName}`;
+            document.getElementById('specPath').textContent = specPath;
+
+            const specFiles = [
+                { name: 'spec.md', icon: '📄', label: 'Spec' },
+                { name: 'README.md', icon: '📋', label: 'README' },
+                { name: 'exemplo.md', icon: '📝', label: 'Exemplo' }
+            ];
+
+            const specFilesHtml = `
+                <div class="tag-list" style="gap: 6px;">
+                    ${specFiles.map(f => `
+                        <button onclick="openSpecFile('${specPath}/${f.name}', '${f.label}')" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(54, 163, 217, 0.2); border: 1px solid rgba(54, 163, 217, 0.5); border-radius: 6px; color: #36a3d9; font-size: 12px; cursor: pointer; transition: all 0.2s; font-weight: 500;" onmouseover="this.style.background='rgba(54, 163, 217, 0.4)'" onmouseout="this.style.background='rgba(54, 163, 217, 0.2)'">${f.icon} ${f.label}</button>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('specFiles').innerHTML = specFilesHtml;
+
+            // Setup open spec button
+            document.getElementById('openSpecBtn').onclick = () => {
+                openSpecFile(`${specPath}/spec.md`, 'Spec');
+            };
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`Copiado: ${text}`);
+            }).catch(err => {
+                alert(`Erro ao copiar: ${err}`);
+            });
+        }
+
+        function copyLinkToClipboard(text, statusSelector, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const statusEl = document.querySelector(statusSelector);
+                const originalBorder = button.style.borderColor;
+                const originalColor = button.style.color;
+
+                // Update button color and status
+                button.style.borderColor = 'rgba(0, 200, 83, 0.6)';
+                button.style.color = '#00d084';
+                statusEl.textContent = '✓ Copiado';
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    button.style.borderColor = originalBorder;
+                    button.style.color = originalColor;
+                    statusEl.textContent = '';
+                }, 2000);
+            }).catch(err => {
+                alert(`Erro ao copiar: ${err}`);
+            });
+        }
+
+        function openSpecFile(filePath, label) {
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) throw new Error('Arquivo não encontrado');
+                    return response.text();
+                })
+                .then(content => {
+                    // Create modal
+                    const modal = document.createElement('div');
+                    modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+
+                    const content_div = document.createElement('div');
+                    content_div.style.cssText = 'background: linear-gradient(135deg, #1a1f26 0%, #15191f 100%); border: 1px solid rgba(54, 163, 217, 0.3); border-radius: 12px; width: 90%; max-width: 800px; max-height: 80vh; overflow: auto; padding: 24px;';
+
+                    const title = document.createElement('div');
+                    title.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(54, 163, 217, 0.2); padding-bottom: 12px;';
+                    title.innerHTML = `<strong style="color: #36a3d9; font-size: 16px;">${label}</strong><button onclick="this.closest('[data-modal]').remove()" style="background: none; border: none; color: #36a3d9; cursor: pointer; font-size: 20px; font-weight: 600;">✕</button>`;
+
+                    const text = document.createElement('pre');
+                    text.style.cssText = 'color: #cbd5e0; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; font-family: "Monaco", "Courier New", monospace;';
+                    text.textContent = content;
+
+                    content_div.appendChild(title);
+                    content_div.appendChild(text);
+                    modal.appendChild(content_div);
+                    modal.setAttribute('data-modal', 'true');
+                    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+                    document.body.appendChild(modal);
+                })
+                .catch(err => {
+                    const modal = document.createElement('div');
+                    modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+
+                    const content_div = document.createElement('div');
+                    content_div.style.cssText = 'background: linear-gradient(135deg, #1a1f26 0%, #15191f 100%); border: 1px solid rgba(255, 100, 100, 0.3); border-radius: 12px; padding: 24px; max-width: 400px; text-align: center;';
+                    content_div.innerHTML = `<div style="color: #ff6b6b; font-size: 14px; margin-bottom: 16px;"><strong>Arquivo não encontrado</strong></div><div style="color: #cbd5e0; font-size: 12px; margin-bottom: 16px;">${filePath}</div><button onclick="this.closest('div').parentElement.remove()" style="padding: 8px 16px; background: rgba(54, 163, 217, 0.3); border: 1px solid rgba(54, 163, 217, 0.6); color: #36a3d9; border-radius: 4px; cursor: pointer; font-weight: 600;">Fechar</button>`;
+
+                    modal.appendChild(content_div);
+                    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+                    document.body.appendChild(modal);
+                });
+        }
+
+        function calculateTransitiveDeps(from, direct) {
+            const all = new Set(direct);
+            const queue = Array.from(direct);
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                DATA.edges
+                    .filter(e => e.from === current && e.type === 'dependency')
+                    .forEach(e => {
+                        if (!all.has(e.to)) {
+                            all.add(e.to);
+                            queue.push(e.to);
+                        }
+                    });
+            }
+
+            // Remove direct dependencies
+            direct.forEach(d => all.delete(d));
+            return all;
+        }
+
+        function calculateTransitiveDependents(to, direct) {
+            const all = new Set(direct);
+            const queue = Array.from(direct);
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                DATA.edges
+                    .filter(e => e.to === current && e.type === 'dependency')
+                    .forEach(e => {
+                        if (!all.has(e.from)) {
+                            all.add(e.from);
+                            queue.push(e.from);
+                        }
+                    });
+            }
+
+            // Remove direct dependents
+            direct.forEach(d => all.delete(d));
+            return all;
+        }
+
+        window.addEventListener('load', initializeGraph);
+    </script>
+</body>
+</html>
