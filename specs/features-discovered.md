@@ -26,7 +26,7 @@
 
 **Arquivos relacionados:** `index.php`, `controllers/CalculadoraController.php`, `operations/OperationFactory.php`, `operations/OperationInterface.php`, `operations/AbstractOperation.php`, `operations/SomaOperation.php`, `operations/SubtracaoOperation.php`, `operations/MultiplicacaoOperation.php`, `operations/DivisaoOperation.php`, `helpers/ValidationHelper.php`, `helpers/NumberHelper.php`, `views/calculadora.tpl.php`, `views/layout.tpl.php`
 
-**Spec gerada:** `Não`
+**Spec gerada:** `Sim` (`specs/001-calculo-aritmetico-basico/spec.md`)
 
 ---
 
