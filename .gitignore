@@ -1,0 +1,9 @@
+# solutis-ai-kit — não commitar (pode conter credenciais)
+.solutis.yaml
+.solutis/
+.specify/feature.json
+tests/api/node_modules/
+tests/e2e/node_modules/
+tests/api/**/test-results/
+tests/e2e/**/test-results/
+tests/e2e/.auth/
